@@ -9,15 +9,7 @@ import (
 	"strings"
 )
 
-func makePagesIdxMap(pages []int, rules [][]int) map[int]int {
-	idx := make(map[int]int)
-	for i, page := range pages {
-		idx[page] = i
-	}
-	return idx
-}
-
-func isValidOrder(pages []int, rules [][]int) bool {
+func swapInvalidPair(pages []int, rules [][]int) bool {
 	idx := makePagesIdxMap(pages, rules)
 
 	for _, rule := range rules {
@@ -25,18 +17,15 @@ func isValidOrder(pages []int, rules [][]int) bool {
 		bIdx, bExists := idx[rule[1]]
 
 		if aExists && bExists && aIdx > bIdx {
-			return false
+			pages[aIdx], pages[bIdx] = pages[bIdx], pages[aIdx]
+			return true
 		}
 	}
-	return true
+
+	return false
 }
 
-func getMidNum(data []int) int {
-	midIdx := len(data) / 2
-	return data[midIdx]
-}
-
-func P1() {
+func P2() {
 	file, err := os.Open("d05/input.txt")
 	if err != nil {
 		fmt.Println("Error opening file:", err)
@@ -80,10 +69,14 @@ func P1() {
 	}
 
 	for _, pages := range data {
-		if isValidOrder(pages, rules) {
+		if !isValidOrder(pages, rules) {
+			isInvalid := true
+			for isInvalid {
+				isInvalid = swapInvalidPair(pages, rules)
+			}
 			total += getMidNum(pages)
 		}
 	}
 
-	fmt.Println("D05 P1: ", total)
+	fmt.Println("D05 P2: ", total)
 }
