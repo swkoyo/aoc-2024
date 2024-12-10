@@ -26,6 +26,11 @@ func isValidOrder(pages []int, rules [][]int) bool {
 	return true
 }
 
+func getMidNum(data []int) int {
+	midIdx := len(data) / 2
+	return data[midIdx]
+}
+
 func P1() {
 	file, err := os.Open("d05/input.txt")
 	if err != nil {
@@ -71,9 +76,7 @@ func P1() {
 
 	for _, pages := range data {
 		if isValidOrder(pages, rules) {
-			midIdx := len(pages) / 2
-			mid := pages[midIdx]
-			total += mid
+			total += getMidNum(pages)
 		}
 	}
 
