@@ -9,6 +9,23 @@ import (
 	"strings"
 )
 
+func isValidOrder(pages []int, rules [][]int) bool {
+	idx := make(map[int]int)
+	for i, page := range pages {
+		idx[page] = i
+	}
+
+	for _, rule := range rules {
+		aIdx, aExists := idx[rule[0]]
+		bIdx, bExists := idx[rule[1]]
+
+		if aExists && bExists && aIdx > bIdx {
+			return false
+		}
+	}
+	return true
+}
+
 func P1() {
 	file, err := os.Open("d05/input.txt")
 	if err != nil {
@@ -19,7 +36,7 @@ func P1() {
 
 	total := 0
 
-	rules := make(map[int][]int)
+	var rules [][]int
 	var data [][]int
 
 	scanner := bufio.NewScanner(file)
@@ -37,10 +54,7 @@ func P1() {
 				log.Fatal("Failed to convert string to int")
 			}
 
-			if _, exists := rules[x]; !exists {
-				rules[x] = make([]int, 0)
-			}
-			rules[x] = append(rules[x], y)
+			rules = append(rules, []int{x, y})
 		} else if strings.Contains(line, ",") {
 			slices := strings.Split(line, ",")
 			var nums []int
@@ -56,35 +70,7 @@ func P1() {
 	}
 
 	for _, pages := range data {
-		isValid := true
-		for prevPage, nextPages := range rules {
-			if !isValid {
-				break
-			}
-			prevPageIdx := -1
-			for idx, currPage := range pages {
-				if currPage == prevPage {
-					prevPageIdx = idx
-					break
-				}
-			}
-			if prevPageIdx > -1 {
-				for _, nextPage := range nextPages {
-					nextPageIdx := -1
-					for idx, currPage := range pages {
-						if currPage == nextPage {
-							nextPageIdx = idx
-							break
-						}
-					}
-					if nextPageIdx > -1 && prevPageIdx > nextPageIdx {
-						isValid = false
-						break
-					}
-				}
-			}
-		}
-		if isValid {
+		if isValidOrder(pages, rules) {
 			midIdx := len(pages) / 2
 			mid := pages[midIdx]
 			total += mid
