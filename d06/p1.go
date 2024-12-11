@@ -74,9 +74,9 @@ func (b *Board) PeekGuard() (rune, bool) {
 	return rune(b.Grid[nextRow][nextCol]), true
 }
 
-func GetGuardPosition(grid []string) Guard {
+func (b *Board) GetGuardPosition() Guard {
 	res := Guard{}
-	for r, row := range grid {
+	for r, row := range b.Grid {
 		for c, char := range row {
 			if char == '<' || char == '^' || char == '>' || char == 'v' {
 				res.Position.Row = r
@@ -120,7 +120,7 @@ func P1() {
 		board.Grid = append(board.Grid, line)
 	}
 
-	board.CurrentGuard = GetGuardPosition(board.Grid)
+	board.CurrentGuard = board.GetGuardPosition()
 	board.Set[board.CurrentGuard.Position] = true
 	board.Total = 1
 
