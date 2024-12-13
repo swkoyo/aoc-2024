@@ -63,7 +63,7 @@ func GetChecksum(data []string) *big.Int {
 	res := big.NewInt(0)
 	for i, char := range data {
 		if char == "." {
-			break
+			continue
 		}
 		num, err := strconv.Atoi(string(char))
 		if err != nil {
