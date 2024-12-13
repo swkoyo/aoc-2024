@@ -86,16 +86,16 @@ func P2() {
 		data = append(data, currRow)
 	}
 
+	set := make(map[string]bool)
 	for r, row := range data {
 		for c, val := range row {
 			if val == 0 {
-				set := make(map[string]bool)
 				path := make([]Coord, 0)
 				UniqueTraverse(data, nil, Coord{row: r, col: c}, path, set)
-				total += len(set)
 			}
 		}
 	}
+	total += len(set)
 
 	fmt.Println("D10 P2: ", total)
 }
