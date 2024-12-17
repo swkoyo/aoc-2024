@@ -3,23 +3,17 @@ package d13
 import (
 	"bufio"
 	"fmt"
+	"math"
 	"os"
 	"strconv"
 	"strings"
 )
 
-const MAX_USES = 100
-
-type Machine struct {
-	PX float64
-	PY float64
-	AX float64
-	AY float64
-	BX float64
-	BY float64
+func isWhole(f float64) bool {
+	return math.Floor(f) == f
 }
 
-func P1() {
+func P2() {
 	file, err := os.Open("d13/input.txt")
 	if err != nil {
 		fmt.Println("Error opening file:", err)
@@ -44,8 +38,8 @@ func P1() {
 				yStr := strings.TrimSuffix(strings.TrimPrefix(parts[2], "Y="), ",")
 				x, _ := strconv.ParseFloat(xStr, 64)
 				y, _ := strconv.ParseFloat(yStr, 64)
-				currMachine.PX = x
-				currMachine.PY = y
+				currMachine.PX = x + 10000000000000
+				currMachine.PY = y + 10000000000000
 				machines = append(machines, currMachine)
 				currMachine = nil
 			} else {
@@ -65,19 +59,12 @@ func P1() {
 	}
 
 	for _, machine := range machines {
-		minTokens := 0
-		for i := 0; i <= MAX_USES; i++ {
-			for j := 0; j < MAX_USES; j++ {
-				if ((machine.AX*float64(i))+(machine.BX*float64(j)) == machine.PX) && ((machine.AY*float64(i))+(machine.BY*float64(j)) == machine.PY) {
-					tokens := (i * 3) + (j * 1)
-					if minTokens == 0 || tokens < minTokens {
-						minTokens = tokens
-					}
-				}
-			}
+		ca := (machine.PX*machine.BY - machine.PY*machine.BX) / (machine.AX*machine.BY - machine.AY*machine.BX)
+		cb := (machine.PX - machine.AX*ca) / machine.BX
+		if isWhole(ca) && isWhole(cb) {
+			total += (int(ca) * 3) + (int(cb) * 1)
 		}
-		total += minTokens
 	}
 
-	fmt.Println("D13 P1: ", total)
+	fmt.Println("D13 P2: ", total)
 }
