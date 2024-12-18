@@ -11,22 +11,26 @@ type Set[T comparable] struct {
 	data map[T]bool
 }
 
-func (s *Set[T]) Add(val *T) {
+func (s *Set[T]) Add(val T) {
 	if !s.Exists(val) {
-		s.data[*val] = true
+		s.data[val] = true
 	}
 }
 
-func (s *Set[T]) Exists(val *T) bool {
-	_, exists := s.data[*val]
+func (s *Set[T]) Exists(val T) bool {
+	_, exists := s.data[val]
 	return exists
 }
 
 type Location struct {
-	row    int
-	col    int
-	dirRow int
-	dirCol int
+	row        int
+	col        int
+	dirRow     int
+	dirCol     int
+	prevRow    int
+	prevCol    int
+	prevDirRow int
+	prevDirCol int
 }
 
 type Item struct {
@@ -39,10 +43,10 @@ func NewItem(priority, row, col, dirRow, dirCol int) *Item {
 	return &Item{
 		priority: priority,
 		value: Location{
-			row,
-			col,
-			dirRow,
-			dirCol,
+			row:    row,
+			col:    col,
+			dirRow: dirRow,
+			dirCol: dirCol,
 		},
 	}
 }
@@ -106,7 +110,7 @@ func P1() {
 	for row, line := range board {
 		for col, char := range line {
 			if char == 'S' {
-				start = Location{row, col, 0, 1}
+				start = Location{row: row, col: col, dirRow: 0, dirCol: 1}
 			}
 		}
 	}
@@ -115,11 +119,11 @@ func P1() {
 	seen := Set[Location]{data: make(map[Location]bool)}
 
 	heap.Push(&pq, NewItem(0, start.row, start.col, start.dirRow, start.dirCol))
-	seen.Add(&start)
+	seen.Add(start)
 
 	for pq.Len() > 0 {
 		item := heap.Pop(&pq).(*Item)
-		seen.Add(&item.value)
+		seen.Add(item.value)
 
 		if board[item.value.row][item.value.col] == 'E' {
 			total = item.priority
@@ -142,7 +146,7 @@ func P1() {
 				continue
 			}
 
-			if seen.Exists(&Location{newRow, newCol, newDirRow, newDirCol}) {
+			if seen.Exists(Location{row: newRow, col: newCol, dirRow: newDirRow, dirCol: newDirCol}) {
 				continue
 			}
 
