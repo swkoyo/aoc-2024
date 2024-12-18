@@ -27,10 +27,10 @@ type Location struct {
 	col        int
 	dirRow     int
 	dirCol     int
-	prevRow    int
-	prevCol    int
-	prevDirRow int
-	prevDirCol int
+}
+
+func (l *Location) ToString() string {
+	return fmt.Sprintf("%d,%d,%d,%d)", l.row, l.col, l.dirRow, l.dirCol)
 }
 
 type Item struct {

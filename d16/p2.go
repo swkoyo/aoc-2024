@@ -6,7 +6,23 @@ import (
 	"fmt"
 	"math"
 	"os"
+	"strings"
 )
+
+type SSet[T comparable] struct {
+	data map[T]bool
+}
+
+func (s SSet[T]) Add(val T) {
+	if !s.Exists(val) {
+		s.data[val] = true
+	}
+}
+
+func (s SSet[T]) Exists(val T) bool {
+	_, exists := s.data[val]
+	return exists
+}
 
 type Queue[T comparable] struct {
 	data []T
@@ -24,22 +40,6 @@ func (q *Queue[T]) Pop() T {
 
 func (q *Queue[T]) IsEmpty() bool {
 	return len(q.data) == 0
-}
-
-func NewItemWithPrev(priority, row, col, dirRow, dirCol, prevRow, prevCol, prevDirRow, prevDirCol int) *Item {
-	return &Item{
-		priority: priority,
-		value: Location{
-			row:        row,
-			col:        col,
-			dirRow:     dirRow,
-			dirCol:     dirCol,
-			prevRow:    prevRow,
-			prevCol:    prevCol,
-			prevDirRow: prevDirRow,
-			prevDirCol: prevDirCol,
-		},
-	}
 }
 
 func P2() {
@@ -70,61 +70,74 @@ func P2() {
 	}
 
 	pq := make(PriorityQueue, 0)
-	lowestCost := make(map[Location]int)
-	lowestCost[start] = 0
-	backtrack := make(map[Location]*Set[Location])
+	lowestCost := make(map[string]int)
+	lowestCost[start.ToString()] = 0
+	backtrack := make(map[string]SSet[string])
 	bestCost := int(math.MaxInt)
-	endStates := Set[Location]{data: make(map[Location]bool)}
+	endStates := SSet[string]{data: make(map[string]bool)}
 
-	heap.Push(&pq, NewItemWithPrev(0, start.row, start.col, start.dirRow, start.dirCol, -1, -1, -1, -1))
+	heap.Push(&pq, NewItem(0, start.row, start.col, start.dirRow, start.dirCol))
 
 	for pq.Len() > 0 {
 		item := heap.Pop(&pq).(*Item)
-		if cost, exists := lowestCost[item.value]; exists && item.priority > cost {
+		cost := item.priority
+		r := item.value.row
+		c := item.value.col
+		dr := item.value.dirRow
+		dc := item.value.dirCol
+
+		lowest := int(math.MaxInt)
+		if lc, exists := lowestCost[item.value.ToString()]; exists {
+			lowest = lc
+		}
+		if cost > lowest {
 			continue
 		}
-		lowestCost[item.value] = item.priority
 
-		if board[item.value.row][item.value.col] == 'E' {
-			if item.priority > bestCost {
+		if board[r][c] == 'E' {
+			if cost > bestCost {
 				break
 			}
-			bestCost = item.priority
-			endStates.Add(Location{row: item.value.row, col: item.value.col, dirRow: item.value.dirRow, dirCol: item.value.dirCol})
+			bestCost = cost
+			endStates.Add(item.value.ToString())
 		}
-
-		currLoc := Location{row: item.value.row, col: item.value.col, dirRow: item.value.dirRow, dirCol: item.value.dirCol}
-		if _, exists := backtrack[currLoc]; !exists {
-			backtrack[currLoc] = &Set[Location]{data: make(map[Location]bool)}
-		}
-		backtrack[currLoc].Add(Location{row: item.value.prevRow, col: item.value.prevCol, dirRow: item.value.prevDirRow, dirCol: item.value.prevDirCol})
 
 		moves := make([]*Item, 0)
-		moves = append(moves, NewItem(item.priority+1, item.value.row+item.value.dirRow, item.value.col+item.value.dirCol, item.value.dirRow, item.value.dirCol))
-		moves = append(moves, NewItem(item.priority+1000, item.value.row, item.value.col, item.value.dirCol, item.value.dirRow*-1))
-		moves = append(moves, NewItem(item.priority+1000, item.value.row, item.value.col, item.value.dirCol*-1, item.value.dirRow))
+		moves = append(moves, NewItem(item.priority+1, r + dr, c + dc, dr, dc))
+		moves = append(moves, NewItem(item.priority+1000, r, c, dc, dr * -1))
+		moves = append(moves, NewItem(item.priority+1000, r, c, dc * -1, dr))
 
 		for _, move := range moves {
 			newCost := move.priority
-			newRow := move.value.row
-			newCol := move.value.col
-			newDirRow := move.value.dirRow
-			newDirCol := move.value.dirCol
+			nr := move.value.row
+			nc := move.value.col
+			ndr := move.value.dirRow
+			ndc := move.value.dirCol
 
-			if board[newRow][newCol] == '#' {
+			if board[nr][nc] == '#' {
 				continue
 			}
 
-			if cost, exists := lowestCost[Location{row: newRow, col: newCol, dirRow: newDirRow, dirCol: newDirCol}]; exists && item.priority > cost {
+			lowest := int(math.MaxInt)
+			if lc, exists := lowestCost[move.value.ToString()]; exists {
+				lowest = lc
+			}
+
+			if  newCost > lowest {
 				continue
 			}
 
-			heap.Push(&pq, NewItemWithPrev(newCost, newRow, newCol, newDirRow, newDirCol, item.value.row, item.value.col, item.value.dirRow, item.value.dirCol))
+			if newCost < lowest {
+				backtrack[move.value.ToString()] = SSet[string]{data: make(map[string]bool)}
+				lowestCost[move.value.ToString()] = newCost
+			}
+			backtrack[move.value.ToString()].Add(item.value.ToString())
+			heap.Push(&pq, NewItem(newCost, nr, nc, ndr, ndc))
 		}
 	}
 
-	states := Queue[Location]{data: make([]Location, 0)}
-	seen := Set[Location]{data: make(map[Location]bool)}
+	states := Queue[string]{data: make([]string, 0)}
+	seen := SSet[string]{data: make(map[string]bool)}
 
 	for state, _ := range endStates.data {
 		states.Push(state)
@@ -132,11 +145,14 @@ func P2() {
 	}
 
 	for !states.IsEmpty() {
-		loc := states.Pop()
-		if _, exists := backtrack[loc]; !exists {
-			continue
+		key := states.Pop()
+		arr := SSet[string]{data: make(map[string]bool)}
+
+		if a, exists := backtrack[key]; exists {
+			arr = a
 		}
-		for last, _ := range backtrack[loc].data {
+
+		for last, _ := range arr.data {
 			if seen.Exists(last) {
 				continue
 			}
@@ -145,11 +161,15 @@ func P2() {
 		}
 	}
 
-	// for loc, _ := range seen.data {
-	// 	fmt.Printf("(%d, %d)\n", loc.row, loc.col)
-	// }
+	res := SSet[string]{data: make(map[string]bool)}
 
-	total = len(seen.data)
+	for loc, _ := range seen.data {
+		parts := strings.Split(loc, ",")	
+		str := fmt.Sprintf("%s,%s", parts[0], parts[1])
+		res.Add(str)
+	}
+
+	total = len(res.data)
 
 	fmt.Println("D16 P2: ", total)
 }
