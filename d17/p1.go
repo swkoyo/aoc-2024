@@ -3,7 +3,6 @@ package d17
 import (
 	"bufio"
 	"fmt"
-	"math"
 	"os"
 	"strconv"
 	"strings"
@@ -16,6 +15,10 @@ type Computer struct {
 	Output  []string
 	Pointer int
 	Program []int
+}
+
+func (c Computer) OutputToString() string {
+	return strings.Join(c.Output, ",")
 }
 
 func (c Computer) Print() {
@@ -83,9 +86,7 @@ func (c *Computer) GetComboOperand(operand int) int {
 }
 
 func (c *Computer) Adv(operand int) {
-	numerator := c.A
-	denominator := int(math.Pow(2, float64(operand)))
-	c.A = numerator / denominator
+	c.A >>= operand
 	c.Pointer += 2
 }
 
@@ -119,16 +120,12 @@ func (c *Computer) Out(operand int) {
 }
 
 func (c *Computer) Bdv(operand int) {
-	numerator := c.A
-	denominator := int(math.Pow(2, float64(operand)))
-	c.B = numerator / denominator
+	c.B = c.A >> operand
 	c.Pointer += 2
 }
 
 func (c *Computer) Cdv(operand int) {
-	numerator := c.A
-	denominator := int(math.Pow(2, float64(operand)))
-	c.C = numerator / denominator
+	c.C = c.A >> operand
 	c.Pointer += 2
 }
 
@@ -168,5 +165,5 @@ func P1() {
 	computer.Run()
 	computer.Print()
 
-	fmt.Println("D17 P1: ", strings.Join(computer.Output, ","))
+	fmt.Println("D17 P1: ", computer.OutputToString())
 }
