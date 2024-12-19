@@ -12,44 +12,6 @@ import (
 
 type Program = []uint64
 
-type DebugInfo struct {
-	RegA uint64
-	RegB uint64
-	RegC uint64
-
-	Program Program
-}
-
-type ParsedInput = DebugInfo
-
-func parseProgram(line string) (Program, error) {
-	split := strings.Split(line, ": ")
-	if len(split) != 2 {
-		return nil, fmt.Errorf("invalid program line: %s", line)
-	}
-	rawS := []rune(split[1])
-	program := make(Program, 0, len(rawS)/2)
-	comas := 0
-
-	for _, char := range rawS {
-		if char == ',' {
-			comas++
-			continue
-		}
-		val := uint64(char - '0')
-		if val < 0 || val > 7 {
-			return nil, fmt.Errorf("invalid program line: %s", line)
-		}
-		program = append(program, val)
-	}
-
-	if comas != len(program)-1 {
-		return nil, fmt.Errorf("invalid program line: %s", line)
-	}
-
-	return program, nil
-}
-
 type ComboOperator uint64
 
 func (c ComboOperator) ToNum() uint64 {
