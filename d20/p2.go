@@ -6,55 +6,7 @@ import (
 	"os"
 )
 
-type Set struct {
-	data map[Location]bool
-}
-
-func (s *Set) Add(l Location) {
-	if !s.Exists(l) {
-		s.data[l] = true
-	}
-}
-
-func (s *Set) Exists(l Location) bool {
-	_, exists := s.data[l]
-	return exists
-}
-
-func NewSet() Set {
-	return Set{map[Location]bool{}}
-}
-
-type Location struct {
-	row int
-	col int
-}
-
-type Queue struct {
-	data []Location
-}
-
-func NewQueue() Queue {
-	return Queue{
-		data: make([]Location, 0),
-	}
-}
-
-func (q *Queue) Push(c Location) {
-	q.data = append(q.data, c)
-}
-
-func (q *Queue) Pop() Location {
-	c := q.data[0]
-	q.data = q.data[1:]
-	return c
-}
-
-func (q *Queue) IsEmpty() bool {
-	return len(q.data) == 0
-}
-
-func P1() {
+func P2() {
 	file, err := os.Open("d20/input.txt")
 	if err != nil {
 		fmt.Println("Error opening file:", err)
@@ -123,39 +75,40 @@ func P1() {
 		}
 	}
 
-	// for _, line := range dists {
-	// 	for _, dist := range line {
-	// 		fmt.Printf("%d\t", dist)
-	// 	}
-	// 	fmt.Println()
-	// }
-
-	jumpRowDir := []int{2, 1, 0, -1, -2, -1, 0, 1}
-	jumpColDir := []int{0, 1, 2, 1, 0, -1, -2, -1}
-
 	for r := 0; r < len(grid); r++ {
 		for c := 0; c < len(grid[0]); c++ {
 			if grid[r][c] == '#' {
 				continue
 			}
-			for i := 0; i < len(jumpRowDir); i++ {
-				nr := r + jumpRowDir[i]
-				nc := c + jumpColDir[i]
+			for radius := 2; radius < 21; radius++ {
+				for dr := 0; dr < radius+1; dr++ {
+					dc := radius - dr
+					s := NewSet()
+					s.Add(Location{r + dr, c + dc})
+					s.Add(Location{r + dr, c - dc})
+					s.Add(Location{r - dr, c + dc})
+					s.Add(Location{r - dr, c - dc})
+					for loc, _ := range s.data {
+						nr := loc.row
+						nc := loc.col
 
-				if nr < 0 || nc < 0 || nr >= len(grid) || nc >= len(grid[0]) {
-					continue
+						if nr < 0 || nc < 0 || nr >= len(grid) || nc >= len(grid[0]) {
+							continue
+						}
+
+						if grid[nr][nc] == '#' {
+							continue
+						}
+
+						if dists[r][c]-dists[nr][nc] >= 100+radius {
+							total += 1
+						}
+					}
 				}
 
-				if grid[nr][nc] == '#' {
-					continue
-				}
-
-				if dists[r][c]-dists[nr][nc] >= 102 {
-					total += 1
-				}
 			}
 		}
 	}
 
-	fmt.Println("D20 P1: ", total)
+	fmt.Println("D20 P2: ", total)
 }
